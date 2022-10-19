@@ -37,6 +37,7 @@ export class ThreeApp {
         this.renderer.setSize(_SERVICES_.winSize.width, _SERVICES_.winSize.height)
         this.renderer.setPixelRatio(window.devicePixelRatio)
         this.renderer.outputEncoding = sRGBEncoding;
+        this.renderer.physicallyCorrectLights = true;
         this.renderer.domElement.classList.add('three-app')
 
         document.body.appendChild(this.renderer.domElement)
