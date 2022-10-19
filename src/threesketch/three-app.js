@@ -15,7 +15,7 @@ import {
     HemisphereLight,
     DirectionalLight,
     CubeCamera,
-    WebGLCubeRenderTarget, BoxGeometry, Mesh, MeshBasicMaterial, sRGBEncoding, SphereGeometry,
+    WebGLCubeRenderTarget, BoxGeometry, Mesh, MeshBasicMaterial, sRGBEncoding, SphereGeometry, MeshStandardMaterial,
 } from 'three'
 
 import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
@@ -94,7 +94,7 @@ export class ThreeApp {
     init() {
 
         const geo = new SphereGeometry( 0.1, 32, 16 );
-        const mat = new MeshBasicMaterial({color: 0x00ABB3});
+        const mat = new MeshStandardMaterial({color: 0x00ABB3});
 
         for ( let i = 0; i < 500; i ++ ) {
 
