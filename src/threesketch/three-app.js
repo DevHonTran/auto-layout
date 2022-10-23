@@ -18,10 +18,14 @@ import {
     WebGLCubeRenderTarget, BoxGeometry, Mesh, MeshBasicMaterial, sRGBEncoding, SphereGeometry, MeshStandardMaterial,
 } from 'three'
 
+import { generateRandomCoordinates } from './gen-locations'
+
 import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass'
 import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass'
 
+const DELTA_POS = 0.1;
+const DELTA_ROT = 0.1;
 
 export class ThreeApp {
 
@@ -97,15 +101,17 @@ export class ThreeApp {
         const geo = new SphereGeometry( 0.1, 32, 16 );
         const mat = new MeshStandardMaterial({color: 0x00ABB3});
 
-        for ( let i = 0; i < 500; i ++ ) {
+        locations = generateRandomCoordinates(1000, 5, 0.5)
+
+        for ( let i = 0; i < 1000; i ++ ) {
 
             const mesh = new Mesh(geo, mat);
 
-            mesh.position.x = Math.random() * 10 - 5;
-            mesh.position.y = Math.random() * 10 - 5;
-            mesh.position.z = Math.random() * 10 - 5;
+            mesh.position.x = locations[i][0];
+            mesh.position.y = locations[i][1];
+            mesh.position.z = locations[i][2];
 
-            mesh.scale.x = mesh.scale.y = mesh.scale.z = Math.random() * 3 + 1;
+            mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
 
             this.scene.add( mesh );
 
@@ -154,10 +160,49 @@ export class ThreeApp {
 
     render() {
 
-        this.camera.position.x += ( this.mouse.x - this.camera.position.x ) * .05;
-        this.camera.position.y += ( - this.mouse.y - this.camera.position.y ) * .05;
+        // this.camera.position.x += ( this.mouse.x - this.camera.position.x ) * .05;
+        // this.camera.position.y += ( - this.mouse.y - this.camera.position.y ) * .05;
 
         this.renderer.render(this.scene, this.camera)
+    }
+
+    moveXInc() {
+        this.camera.position.x += DELTA_POS;;
+    }
+    moveXDec(event) {
+        console.log(event);
+        this.camera.position.x -= DELTA_POS;;
+    }
+    moveYInc() {
+        this.camera.position.y += DELTA_POS;;
+    }
+    moveYDec() {
+        this.camera.position.y -= DELTA_POS;;
+    }
+    moveZInc() {
+        this.camera.position.z += DELTA_POS;;
+    }
+    moveZDec() {
+        this.camera.position.z -= DELTA_POS;;
+    }
+
+    rotXInc() {
+        this.camera.rotation.x += DELTA_POS;;
+    }
+    rotXDec() {
+        this.camera.rotation.x -= DELTA_POS;;
+    }
+    rotYInc() {
+        this.camera.rotation.y += DELTA_POS;;
+    }
+    rotYDec() {
+        this.camera.rotation.y -= DELTA_POS;;
+    }
+    rotZInc() {
+        this.camera.rotation.z += DELTA_POS;;
+    }
+    rotZDec() {
+        this.camera.rotation.z -= DELTA_POS;;
     }
 
     mouseMove(event) {
@@ -165,9 +210,59 @@ export class ThreeApp {
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
     }
 
+    handleKeyPress(event) {
+        console.log(event)
+        if (event.shiftKey) {
+            switch(event.code) {
+                case 'KeyA':
+                    this.rotYInc()
+                    break;
+                case 'KeyD':
+                    this.rotYDec()
+                    break;
+                case 'KeyW':
+                    this.rotXInc()
+                    break;
+                case 'KeyS':
+                    this.rotXDec()
+                    break;
+                case 'KeyQ':
+                    this.rotZDec()
+                    break;
+                case 'KeyE':
+                    this.rotZInc()
+                    break;
+            }
+        } else {
+            switch(event.code) {
+                case 'KeyA':
+                    this.moveXDec()
+                    break;
+                case 'KeyD':
+                    this.moveXInc()
+                    break;
+                case 'KeyW':
+                    this.moveYInc()
+                    break;
+                case 'KeyS':
+                    this.moveYDec()
+                    break;
+                case 'KeyQ':
+                    this.moveZDec()
+                    break;
+                case 'KeyE':
+                    this.moveZInc()
+                    break;
+            }
+        }
+        
+          
+    }
+
     bindEvents() {
 
         this.mouseMove = this.mouseMove.bind(this)
+        window.addEventListener('keypress', this.handleKeyPress.bind(this))
 
         window.addEventListener('resize', this.onWindowResize.bind(this))
         window.addEventListener('mousemove', this.mouseMove.bind(this))
