@@ -18,13 +18,13 @@ import {
     WebGLCubeRenderTarget, BoxGeometry, Mesh, MeshBasicMaterial, sRGBEncoding, SphereGeometry, MeshStandardMaterial,
 } from 'three'
 
-import { generateRandomCoordinates } from './gen-locations'
-
+import { generateRandomSphere, generateMultiRandomSphere } from './gen-locations'
 import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
 import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass'
 import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass'
+import { generateGalaxyMetaverse, generateMultiGalaxyMetaverse } from './gen-galaxy-locations'
 
-const DELTA_POS = 0.1;
+const DELTA_POS = 0.3;
 const DELTA_ROT = 0.1;
 
 export class ThreeApp {
@@ -101,21 +101,24 @@ export class ThreeApp {
         const geo = new SphereGeometry( 0.1, 32, 16 );
         const mat = new MeshStandardMaterial({color: 0x00ABB3});
 
-        locations = generateRandomCoordinates(1000, 5, 0.5)
+        // let locations = generateRandomSphere(1000, 4, 0.1)
+        let locations = generateMultiRandomSphere(1000, 20, 40)
+        // let locations = generateMultiGalaxyMetaverse(1000, 20, 50, 0.8)
+        // let locations = generateGalaxyMetaverse(1000, 10, 1)
+
 
         for ( let i = 0; i < 1000; i ++ ) {
 
+            let rotated = locations[i]
             const mesh = new Mesh(geo, mat);
 
-            mesh.position.x = locations[i][0];
-            mesh.position.y = locations[i][1];
-            mesh.position.z = locations[i][2];
+            mesh.position.x = rotated[0];
+            mesh.position.y = rotated[1];
+            mesh.position.z = rotated[2];
 
             mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
 
             this.scene.add( mesh );
-
-
         }
 
     }

@@ -1,3 +1,5 @@
+import { AssetLoader } from "@/threesketch/alien-js/loaders/AssetLoader";
+
 const LineEq = (
     y2,
     y1,
@@ -74,4 +76,44 @@ const GetOffsetThreeJs = ({left, top, width, height, winSize}) => {
     }
 }
 
-export {MathMap, MathMapVector3, MathLerp, RandomFloat, MathAround, LineEq, Radians, Distance, GetOffsetThreeJs};
+const matrixMultiply = (matA, matB) => {
+    let na = matA.length, ma = matA[0].length;
+    let nb = matB.length, mb = matB[0].length;
+    if (ma != nb) throw Error("error when matrix multiply")
+    let res = []
+    for (let i = 0; i < na; i++) {
+        let tmp = []
+        for (let j = 0; j < mb; j++) {
+            tmp.push(0)
+        }
+        res.push(tmp)
+    }
+    for (let i = 0; i < na; i++) {
+        for (let j = 0; j < mb; j++) {
+            for (let k = 0; k < ma; k++) {
+                res[i][j] += matA[i][k] * matB[k][j]
+            }
+        }
+    }
+    return res
+}
+
+function xRotate(x, y, z, angle) {
+    const mat = [[1, 0, 0], [0, Math.cos(angle), -Math.sin(angle)], [0, Math.sin(angle), Math.cos(angle)]]
+    const res = matrixMultiply([[x, y, z]], mat)
+    return [res[0][0], res[0][1], res[0][2]]
+}
+
+function yRotate(x, y, z, angle) {
+    const mat = [[Math.cos(angle), 0, Math.sin(angle)], [0, 1, 0], [-Math.sin(angle), 0, Math.cos(angle)]]
+    const res = matrixMultiply([[x, y, z]], mat)
+    return [res[0][0], res[0][1], res[0][2]]
+}
+
+function zRotate(x, y, z, angle) {
+    const mat = [[Math.cos(angle), -Math.sin(angle), 0], [Math.sin(angle), Math.cos(angle), 0], [0, 0, 1]]
+    const res = matrixMultiply([[x, y, z]], mat)
+    return [res[0][0], res[0][1], res[0][2]]
+}
+
+export {MathMap, MathMapVector3, MathLerp, RandomFloat, MathAround, LineEq, Radians, Distance, GetOffsetThreeJs, matrixMultiply, xRotate, yRotate, zRotate};
