@@ -1,4 +1,4 @@
-import gsap from 'gsap'
+import {gsap} from 'gsap'
 import {_SERVICES_} from '@/libs/services'
 import {
     _EMIT_EVENT_, PAGE_BEFORE_LEAVE, PAGE_ENTER, PAGE_LOADED,
@@ -15,14 +15,24 @@ import {
     HemisphereLight,
     DirectionalLight,
     CubeCamera,
-    WebGLCubeRenderTarget, BoxGeometry, Mesh, MeshBasicMaterial, sRGBEncoding, SphereGeometry, MeshStandardMaterial,
+    WebGLCubeRenderTarget,
+    BoxGeometry,
+    Mesh,
+    MeshBasicMaterial,
+    sRGBEncoding,
+    SphereGeometry,
+    MeshStandardMaterial,
 } from 'three'
 
-import { generateRandomSphere, generateMultiRandomSphere } from './gen-locations'
-import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
-import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass'
-import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass'
-import { generateGalaxyMetaverse, generateMultiGalaxyMetaverse } from './gen-galaxy-locations'
+import {generateRandomSphere, generateMultiRandomSphere} from './gen-locations'
+// import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer'
+// import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass'
+// import {BokehPass} from 'three/examples/jsm/postprocessing/BokehPass'
+import {FlyControls} from 'three/examples/jsm/controls/FlyControls'
+import Stats from 'three/examples/jsm/libs/stats.module'
+
+import {generateGalaxyMetaverse, generateMultiGalaxyMetaverse} from './gen-galaxy-locations'
+
 
 const DELTA_POS = 0.3;
 const DELTA_ROT = 0.1;
@@ -52,29 +62,31 @@ export class ThreeApp {
         // this.scene.fog = new Fog(0xffffff, 3000, 4000);
 
 
-        this.scene.add(this.cubeCamera);
+        // this.scene.add(this.cubeCamera);
 
         this.mouse = {x: 0, y: 0}
         const {width, height, devicePixelRatio} = _SERVICES_.winSize
         const aspect = width / height
 
         // this.camera = new PerspectiveCamera(60, aspect, .01, 1000);
-        this.camera = new PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.01, 100 );
-        this.camera.position.z = 3;
-        this.camera.focalLength = 3;
+
+        this.camera = new PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 100);
+        this.camera.position.z = 10;
+        // this.camera.focalLength = 10;
+
         this.camera.aspect = width / height
 
 
-        const renderPass = new RenderPass(this.scene, this.camera)
-        this.bokehPass = new BokehPass(this.scene, this.camera, {
-            focus: 1.0, aperture: 0.0001, maxblur: 1.0, width: window.innerWidth, height: window.innerHeight
-        })
-        this.composer = new EffectComposer(this.renderer)
-        this.composer.addPass(renderPass)
-        this.composer.addPass(this.bokehPass)
-
-        const cubeRenderTarget = new WebGLCubeRenderTarget(2048)
-        this.cubeCamera = new CubeCamera(0.1, 100, cubeRenderTarget)
+        // const renderPass = new RenderPass(this.scene, this.camera)
+        // this.bokehPass = new BokehPass(this.scene, this.camera, {
+        //     focus: 1.0, aperture: 0.0001, maxblur: 1.0, width: window.innerWidth, height: window.innerHeight
+        // })
+        // this.composer = new EffectComposer(this.renderer)
+        // this.composer.addPass(renderPass)
+        // this.composer.addPass(this.bokehPass)
+        //
+        // const cubeRenderTarget = new WebGLCubeRenderTarget(2048)
+        // this.cubeCamera = new CubeCamera(0.1, 100, cubeRenderTarget)
 
         this.clock = new Clock()
         this.props = {scrollTop: 0}
@@ -90,6 +102,18 @@ export class ThreeApp {
         // this.orthoCamera.position.z = 250
 
         // this.panel = new GUI({width: 310});
+
+        this.flyControl = new FlyControls(this.camera, this.renderer.domElement);
+
+        this.stats = new Stats();
+        document.body.appendChild(this.stats.dom);
+
+        this.flyControl.movementSpeed = 50;
+        // this.flyControl.domElement = this.renderer.domElement;
+        this.flyControl.rollSpeed = Math.PI / 24;
+        this.flyControl.autoForward = false;
+        this.flyControl.dragToLook = false;
+
         this.render = this.render.bind(this)
         this.init()
         this.initLight()
@@ -98,7 +122,7 @@ export class ThreeApp {
 
     init() {
 
-        const geo = new SphereGeometry( 0.1, 32, 16 );
+        const geo = new SphereGeometry(0.1, 32, 16);
         const mat = new MeshStandardMaterial({color: 0x00ABB3});
 
         // let locations = generateRandomSphere(1000, 4, 0.1)
@@ -107,7 +131,7 @@ export class ThreeApp {
         // let locations = generateGalaxyMetaverse(1000, 10, 1)
 
 
-        for ( let i = 0; i < 1000; i ++ ) {
+        for (let i = 0; i < 1000; i++) {
 
             let rotated = locations[i]
             const mesh = new Mesh(geo, mat);
@@ -118,7 +142,7 @@ export class ThreeApp {
 
             mesh.scale.x = mesh.scale.y = mesh.scale.z = 2;
 
-            this.scene.add( mesh );
+            this.scene.add(mesh);
         }
 
     }
@@ -166,46 +190,65 @@ export class ThreeApp {
         // this.camera.position.x += ( this.mouse.x - this.camera.position.x ) * .05;
         // this.camera.position.y += ( - this.mouse.y - this.camera.position.y ) * .05;
 
+        const delta = this.clock.getDelta();
+        this.flyControl.update(delta);
+
+        this.stats.update();
         this.renderer.render(this.scene, this.camera)
+
+        // this.flyControl.movementSpeed = 0.33 * d;
+        // console.log('___delta', delta);
+
+
     }
 
     moveXInc() {
-        this.camera.position.x += DELTA_POS;;
+        this.camera.position.x += DELTA_POS;
     }
+
     moveXDec(event) {
         console.log(event);
-        this.camera.position.x -= DELTA_POS;;
+        this.camera.position.x -= DELTA_POS;
     }
+
     moveYInc() {
-        this.camera.position.y += DELTA_POS;;
+        this.camera.position.y += DELTA_POS;
     }
+
     moveYDec() {
-        this.camera.position.y -= DELTA_POS;;
+        this.camera.position.y -= DELTA_POS;
     }
+
     moveZInc() {
-        this.camera.position.z += DELTA_POS;;
+        this.camera.position.z += DELTA_POS;
     }
+
     moveZDec() {
-        this.camera.position.z -= DELTA_POS;;
+        this.camera.position.z -= DELTA_POS;
     }
 
     rotXInc() {
-        this.camera.rotation.x += DELTA_POS;;
+        this.camera.rotation.x += DELTA_POS;
     }
+
     rotXDec() {
-        this.camera.rotation.x -= DELTA_POS;;
+        this.camera.rotation.x -= DELTA_POS;
     }
+
     rotYInc() {
-        this.camera.rotation.y += DELTA_POS;;
+        this.camera.rotation.y += DELTA_POS;
     }
+
     rotYDec() {
-        this.camera.rotation.y -= DELTA_POS;;
+        this.camera.rotation.y -= DELTA_POS;
     }
+
     rotZInc() {
-        this.camera.rotation.z += DELTA_POS;;
+        this.camera.rotation.z += DELTA_POS;
     }
+
     rotZDec() {
-        this.camera.rotation.z -= DELTA_POS;;
+        this.camera.rotation.z -= DELTA_POS;
     }
 
     mouseMove(event) {
@@ -216,7 +259,7 @@ export class ThreeApp {
     handleKeyPress(event) {
         console.log(event)
         if (event.shiftKey) {
-            switch(event.code) {
+            switch (event.code) {
                 case 'KeyA':
                     this.rotYInc()
                     break;
@@ -237,7 +280,7 @@ export class ThreeApp {
                     break;
             }
         } else {
-            switch(event.code) {
+            switch (event.code) {
                 case 'KeyA':
                     this.moveXDec()
                     break;
@@ -258,17 +301,17 @@ export class ThreeApp {
                     break;
             }
         }
-        
-          
+
+
     }
 
     bindEvents() {
 
         this.mouseMove = this.mouseMove.bind(this)
-        window.addEventListener('keypress', this.handleKeyPress.bind(this))
+        // window.addEventListener('keypress', this.handleKeyPress.bind(this))
 
         window.addEventListener('resize', this.onWindowResize.bind(this))
-        window.addEventListener('mousemove', this.mouseMove.bind(this))
+        // window.addEventListener('mousemove', this.mouseMove.bind(this))
         _EMIT_EVENT_.on(PAGE_ENTER, this.pageEnter.bind(this))
         _EMIT_EVENT_.on(PAGE_LOADED, this.pageLoaded.bind(this))
         _EMIT_EVENT_.on(PAGE_BEFORE_LEAVE, () => this.isHasWork = false)
