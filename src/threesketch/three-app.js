@@ -41,7 +41,7 @@ import {
 import { sineIn } from '@/libs/easing'
 
 const W = 2
-const DELTA_T = (2 * Math.PI) / (10 * 1000)
+const DELTA_T = (2 * Math.PI) / (10 * 50000)
 const DELTA_POS = 0.3
 
 function rand(l, r) {
@@ -274,6 +274,10 @@ export class ThreeApp {
     // this.camera.position.x = x
     // this.camera.position.y = y
     // this.camera.position.z = z + 0.05
+    // this.camera.position.x = 0.1
+    // this.camera.position.y = -0.1
+    // this.camera.position.z = 0
+
 
     this.renderer.render(this.scene, this.camera)
   }
