@@ -22,10 +22,21 @@ import {
     sRGBEncoding,
     SphereGeometry,
     MeshStandardMaterial,
+    Vector2,
+    TextureLoader
 } from 'three'
 
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
+// import {Sky} from 'three/examples/jsm/objects/Sky.js';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
+import {EffectComposer} from 'three/examples/jsm/postprocessing/EffectComposer.js';
+
+import {RenderPass} from 'three/examples/jsm/postprocessing/RenderPass.js';
+import {ShaderPass} from 'three/examples/jsm/postprocessing/ShaderPass.js';
+
+import vertex from './post-processing/vertex.glsl';
+// import quadtree from './post-processing/quadtree.glsl';
+import simpleGalaxy from './post-processing/simple-galaxy.glsl';
 import {
     generateRandomSphere, generateMultiRandomSphere,
 } from './gen-locations'
@@ -38,7 +49,7 @@ import {
 import {sineIn} from '@/libs/easing'
 
 const W = 2
-const DELTA_T = (2 * Math.PI) / (10 * 50000)
+const DELTA_T = (2 * Math.PI) / (10 * 5000)
 const DELTA_POS = 0.3
 
 function rand(l, r) {
@@ -98,7 +109,7 @@ export class ThreeApp {
         document.body.appendChild(this.renderer.domElement)
 
         this.scene = new Scene()
-        this.scene.background = new Color(0xffffff)
+        this.scene.background = new Color(0x000000)
         // this.scene.fog = new Fog(0xffffff, 3000, 4000);
 
         this.mouse = {x: 0, y: 0}
@@ -121,13 +132,56 @@ export class ThreeApp {
 
         this.render = this.render.bind(this)
         this.init()
+        this.postProcessing();
         this.initLight()
         this.bindEvents()
     }
 
+    postProcessing() {
+        // postprocessing
+
+        this.composer = new EffectComposer(this.renderer);
+        this.composer.addPass(new RenderPass(this.scene, this.camera));
+
+
+        this.effect1 = new ShaderPass({
+            uniforms: {
+                tDiffuse: {value: null},
+                iChannel: {value: null},
+                iTime: {value: 0},
+                iResolution: {value: new Vector2(window.innerWidth, window.innerHeight)}
+            }, vertexShader: vertex, // fragmentShader: quadtree
+            fragmentShader: simpleGalaxy
+        });
+        // effect1.uniforms[ 'scale' ].value = 4;
+        this.composer.addPass(this.effect1);
+
+        const texture = new TextureLoader().load('assets/channel/iChannel.png');
+        this.effect1.uniforms['iChannel'].value = texture;
+
+        // const effect2 = new ShaderPass( RGBShiftShader );
+        // effect2.uniforms[ 'amount' ].value = 0.0015;
+        // composer.addPass( effect2 );
+
+        //
+    }
+
+    initSkybox() {
+        // textureCube = loader.load( [ 'posx.jpg', 'negx.jpg', 'posy.jpg', 'negy.jpg', 'posz.jpg', 'negz.jpg' ] );
+        // textureCube.encoding = THREE.sRGBEncoding;
+        //
+        // const textureLoader = new THREE.TextureLoader();
+        //
+        // textureEquirec = textureLoader.load( 'textures/2294472375_24a3b8ef46_o.jpg' );
+        // textureEquirec.mapping = THREE.EquirectangularReflectionMapping;
+        // textureEquirec.encoding = THREE.sRGBEncoding;
+        //
+        // scene.background = textureCube;
+    }
+
     init() {
         const geo = new SphereGeometry(0.1, 32, 16)
-        const mat = new MeshStandardMaterial({color: 0x00abb3})
+        const mat = new MeshStandardMaterial({color: 0xffffff})
 
         // let locations = generateRandomSphere(1000, 4, 0.1) // random thanh 1 hinh cau
         // let locations = generateMultiRandomSphere(1000, 20, 40) // random thanh nhieu hinh cau
@@ -213,6 +267,7 @@ export class ThreeApp {
         this.camera.updateProjectionMatrix()
         this.renderer.setPixelRatio(window.devicePixelRatio)
         this.renderer.setSize(width, height)
+        this.composer.setSize(width, height);
     }
 
     pageEnter() {
@@ -246,61 +301,15 @@ export class ThreeApp {
         // this.camera.position.z = 0
 
         // const delta = this.clock.getDelta();
-        // this.flyControl.update(delta);
 
         this.controls.update();
 
         this.stats.update();
         this.renderer.render(this.scene, this.camera)
-    }
 
-    moveXInc() {
-        this.camera.position.x += DELTA_POS
-    }
+        this.effect1.uniforms['iTime'].value += .1;
 
-    moveXDec(event) {
-        console.log(event)
-        this.camera.position.x -= DELTA_POS
-    }
-
-    moveYInc() {
-        this.camera.position.y += DELTA_POS
-    }
-
-    moveYDec() {
-        this.camera.position.y -= DELTA_POS
-    }
-
-    moveZInc() {
-        this.camera.position.z += DELTA_POS
-    }
-
-    moveZDec() {
-        this.camera.position.z -= DELTA_POS
-    }
-
-    rotXInc() {
-        this.camera.rotation.x += DELTA_POS
-    }
-
-    rotXDec() {
-        this.camera.rotation.x -= DELTA_POS
-    }
-
-    rotYInc() {
-        this.camera.rotation.y += DELTA_POS
-    }
-
-    rotYDec() {
-        this.camera.rotation.y -= DELTA_POS
-    }
-
-    rotZInc() {
-        this.camera.rotation.z += DELTA_POS
-    }
-
-    rotZDec() {
-        this.camera.rotation.z -= DELTA_POS
+        this.composer.render();
     }
 
     mouseMove(event) {
@@ -308,59 +317,10 @@ export class ThreeApp {
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
     }
 
-    handleKeyPress(event) {
-        console.log(event)
-        if (event.shiftKey) {
-            switch (event.code) {
-                case 'KeyA':
-                    this.rotYInc()
-                    break
-                case 'KeyD':
-                    this.rotYDec()
-                    break
-                case 'KeyW':
-                    this.rotXInc()
-                    break
-                case 'KeyS':
-                    this.rotXDec()
-                    break
-                case 'KeyQ':
-                    this.rotZDec()
-                    break
-                case 'KeyE':
-                    this.rotZInc()
-                    break
-            }
-        } else {
-            switch (event.code) {
-                case 'KeyA':
-                    this.moveXDec()
-                    break
-                case 'KeyD':
-                    this.moveXInc()
-                    break
-                case 'KeyW':
-                    this.moveYInc()
-                    break
-                case 'KeyS':
-                    this.moveYDec()
-                    break
-                case 'KeyQ':
-                    this.moveZDec()
-                    break
-                case 'KeyE':
-                    this.moveZInc()
-                    break
-            }
-        }
-    }
 
     bindEvents() {
-        this.mouseMove = this.mouseMove.bind(this)
-        // window.addEventListener('keypress', this.handleKeyPress.bind(this))
 
         window.addEventListener('resize', this.onWindowResize.bind(this))
-        // window.addEventListener('mousemove', this.mouseMove.bind(this))
         _EMIT_EVENT_.on(PAGE_ENTER, this.pageEnter.bind(this))
         _EMIT_EVENT_.on(PAGE_LOADED, this.pageLoaded.bind(this))
         _EMIT_EVENT_.on(PAGE_BEFORE_LEAVE, () => this.isHasWork = false)
