@@ -86,6 +86,7 @@
     "msdf-bmfont-xml": "^2.6.0",
     "node-html-parser": "^5.3.3",
     "postprocessing": "^6.26.3",
+    "simplex-noise": "^4.0.1",
     "splitting": "^1.0.6",
     "three": "^0.137.5",
     "three-bmfont-text": "^3.0.1",
