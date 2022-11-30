@@ -26,59 +26,15 @@ import {
 
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 
-import {
-    generateRandomSphere, generateMultiRandomSphere,
-} from './gen-locations'
+import {genMovingObjects} from './gen-moving-objects'
 
 import Stats from 'three/examples/jsm/libs/stats.module'
 
-import {
-    generateGalaxyMetaverse, generateMultiGalaxyMetaverse,
-} from './gen-galaxy-locations'
-import {sineIn} from '@/libs/easing'
-
 const W = 2
-const DELTA_T = (2 * Math.PI) / (10 * 50000)
+const DELTA_T = (2 * Math.PI) / (10 * 2000)
+const NUM_ROCKS = 1000
 const DELTA_POS = 0.3
 
-function rand(l, r) {
-    return Math.random() * (r - l) + l
-}
-
-// gen a function with 2*PI period
-function genPeriodicFuncs() {
-    let x = Math.random() * 2 * Math.PI
-    let w = rand(0.2, 1)
-    let a = Math.cos(x) * w
-    let b = Math.sin(x) * w
-    let u = rand(0.8, 1.2)
-    let v = rand(0.8, 1.2)
-    return (t) => {
-        return a * Math.cos(t) + b * Math.sin(t)
-    }
-}
-
-class MovingObject {
-    constructor(mesh, fx, fy, fz, ox, oy, oz, ot, w) {
-        this.fx = fx
-        this.fy = fy
-        this.fz = fz
-        this.ox = ox
-        this.oy = oy
-        this.oz = oz
-        this.ot = ot
-        this.mesh = mesh
-        this.w = w || 1
-    }
-
-    getPos(t) {
-        return {
-            x: (this.fx(t + this.ot) + this.ox) * this.w,
-            y: (this.fy(t + this.ot) + this.oy) * this.w,
-            z: (this.fz(t + this.ot) + this.oz) * this.w,
-        }
-    }
-}
 
 export class ThreeApp {
     constructor() {
@@ -129,61 +85,19 @@ export class ThreeApp {
         const geo = new SphereGeometry(0.1, 32, 16)
         const mat = new MeshStandardMaterial({color: 0x00abb3})
 
-        // let locations = generateRandomSphere(1000, 4, 0.1) // random thanh 1 hinh cau
-        // let locations = generateMultiRandomSphere(1000, 20, 40) // random thanh nhieu hinh cau
-        // let locations = generateMultiGalaxyMetaverse(1000, 20, 50, 0.8) // random thanh nhieu hinh dia
-        // let locations = generateGalaxyMetaverse(1000, 10, 1) // random thanh mot cai dia
-
-        const calcOffset = (fx) => {
-            const samples = 1000
-            let sum = 0
-            for (let i = 0; i < 2 * Math.PI; i += (2 * Math.PI) / samples) {
-                sum += fx(i)
-            }
-            return -sum / samples
-        }
-
-        this.movingObject = []
-        const lines = 16
-        for (let i = 0; i < lines; i++) {
-            let fx = genPeriodicFuncs()
-            let fy = genPeriodicFuncs()
-            let fz = genPeriodicFuncs()
-            let ox = calcOffset(fx)
-            let oy = calcOffset(fy)
-            let oz = calcOffset(fz)
-
-            for (let j = 0; j < 1024 / lines; j++) {
-                const ot = (j * 2 * Math.PI) / (1024 / lines)
-                const mesh = new Mesh(geo, mat)
-
-                mesh.position.x = fx(ot) + ox
-                mesh.position.y = fy(ot) + oy
-                mesh.position.z = fz(ot) + oz
-
-                mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.1
-
-                const mObj = new MovingObject(mesh, fx, fy, fz, ox, oy, oz, ot)
-
-                this.movingObject.push(mObj)
-
-                this.scene.add(mObj.mesh)
-            }
+        this.movingObjects = genMovingObjects(NUM_ROCKS)
+        this.meshes = []
+        for (let i = 0; i < NUM_ROCKS; i++) {
+          const {x, y, z} = this.movingObjects[i].getPos(Date.now() * DELTA_T);
+          const mesh = new Mesh(geo, mat);
+          this.meshes.push(mesh);
+          this.meshes[i].position.x = x;
+          this.meshes[i].position.y = y;
+          this.meshes[i].position.z = z;
+          mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.1
+          this.scene.add(this.meshes[i])
         }
         this.startTime = Date.now()
-
-        // for (let i = 0; i < 1000; i++) {
-        //   let rotated = locations[i]
-        //   const mesh = new Mesh(geo, mat)
-
-        //   mesh.position.x = rotated[0]
-        //   mesh.position.y = rotated[1]
-        //   mesh.position.z = rotated[2]
-
-        //   mesh.scale.x = mesh.scale.y = mesh.scale.z = 2
-
-        //   this.scene.add(mesh)
-        // }
     }
 
     initLight() {
@@ -225,28 +139,13 @@ export class ThreeApp {
 
     render() {
         const curTime = Date.now()
-        // this.camera.position.x += ( this.mouse.x - this.camera.position.x ) * .05;
-        // this.camera.position.y += ( - this.mouse.y - this.camera.position.y ) * .05;
 
-        for (let i = 0; i < this.movingObject.length; i++) {
-            const {x, y, z} = this.movingObject[i].getPos((curTime - this.startTime) * DELTA_T,)
-            this.movingObject[i].mesh.position.x = x
-            this.movingObject[i].mesh.position.y = y
-            this.movingObject[i].mesh.position.z = z
+        for (let i = 0; i < this.movingObjects.length; i++) {
+            const {x, y, z} = this.movingObjects[i].getPos((curTime) * DELTA_T,)
+            this.meshes[i].position.x = x
+            this.meshes[i].position.y = y
+            this.meshes[i].position.z = z
         }
-
-        // const { x, y, z } = this.movingObject[0].getPos(
-        //   (curTime - this.startTime) * DELTA_T,
-        // )
-        // this.camera.position.x = x
-        // this.camera.position.y = y
-        // this.camera.position.z = z + 0.05
-        // this.camera.position.x = 0.1
-        // this.camera.position.y = -0.1
-        // this.camera.position.z = 0
-
-        // const delta = this.clock.getDelta();
-        // this.flyControl.update(delta);
 
         this.controls.update();
 
@@ -254,105 +153,9 @@ export class ThreeApp {
         this.renderer.render(this.scene, this.camera)
     }
 
-    moveXInc() {
-        this.camera.position.x += DELTA_POS
-    }
-
-    moveXDec(event) {
-        console.log(event)
-        this.camera.position.x -= DELTA_POS
-    }
-
-    moveYInc() {
-        this.camera.position.y += DELTA_POS
-    }
-
-    moveYDec() {
-        this.camera.position.y -= DELTA_POS
-    }
-
-    moveZInc() {
-        this.camera.position.z += DELTA_POS
-    }
-
-    moveZDec() {
-        this.camera.position.z -= DELTA_POS
-    }
-
-    rotXInc() {
-        this.camera.rotation.x += DELTA_POS
-    }
-
-    rotXDec() {
-        this.camera.rotation.x -= DELTA_POS
-    }
-
-    rotYInc() {
-        this.camera.rotation.y += DELTA_POS
-    }
-
-    rotYDec() {
-        this.camera.rotation.y -= DELTA_POS
-    }
-
-    rotZInc() {
-        this.camera.rotation.z += DELTA_POS
-    }
-
-    rotZDec() {
-        this.camera.rotation.z -= DELTA_POS
-    }
-
     mouseMove(event) {
         this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
         this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
-    }
-
-    handleKeyPress(event) {
-        console.log(event)
-        if (event.shiftKey) {
-            switch (event.code) {
-                case 'KeyA':
-                    this.rotYInc()
-                    break
-                case 'KeyD':
-                    this.rotYDec()
-                    break
-                case 'KeyW':
-                    this.rotXInc()
-                    break
-                case 'KeyS':
-                    this.rotXDec()
-                    break
-                case 'KeyQ':
-                    this.rotZDec()
-                    break
-                case 'KeyE':
-                    this.rotZInc()
-                    break
-            }
-        } else {
-            switch (event.code) {
-                case 'KeyA':
-                    this.moveXDec()
-                    break
-                case 'KeyD':
-                    this.moveXInc()
-                    break
-                case 'KeyW':
-                    this.moveYInc()
-                    break
-                case 'KeyS':
-                    this.moveYDec()
-                    break
-                case 'KeyQ':
-                    this.moveZDec()
-                    break
-                case 'KeyE':
-                    this.moveZInc()
-                    break
-            }
-        }
     }
 
     bindEvents() {
