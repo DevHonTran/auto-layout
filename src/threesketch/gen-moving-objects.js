@@ -24,17 +24,44 @@ class DiffrentialMovingObject {
     this.z = z;
   }
 
-  getPos(dt) {
+  getPos(dt, apply=false) {
+    if (apply) {
+      this.x = this.x + this.dx(this.x, this.y, this.z, dt);
+      this.y = this.y + this.dy(this.x, this.y, this.z, dt);
+      this.z = this.z + this.dz(this.x, this.y, this.z, dt);
+      return {x : this.x, y : this.y, z : this.z}
+    }
     return {
-      x: x + this.dx(dt),
-      y: y + this.dy(dt),
-      z: z + this.dz(dt),
+      x: this.x + this.dx(this.x, this.y, this.z, dt),
+      y: this.y + this.dy(this.x, this.y, this.z, dt),
+      z: this.z + this.dz(this.x, this.y, this.z, dt),
     }
   }
 }
 
 function rand(l, r) {
   return Math.random() * (r - l) + l
+}
+
+
+export function genDMovingObjects(numMovingObjects) {
+  const dt = 0.0020
+  const numToGet = 1000
+  const a = 0.44, b = 1.1, c = 1, e = 0.65, f = 20, k = 55;
+  let dx = (x, y, z, dt) => y * dt;
+  let dy = (x, y, z, dt) => z * dt;
+  let dz = (x, y, z, dt) => (-c * x - b * y - a * z + x * x) * dt;
+  let x0 = 0.01, y0 = 0.2, z0 = 0.01;
+  // const curObj = new DiffrentialMovingObject(dx, dy, dz, x0, y0, z0);
+  const res = []
+  for (let i = 0; i < numMovingObjects; i++) {
+    // for (let j = 0; j < numToGet; j++) {
+    //   curObj.getPos(dt, true);
+    // }
+    res.push(new DiffrentialMovingObject(dx, dy, dz, rand(-0.2, 0.2), rand(-0.2, 0.2), rand(-0.2, 0.2)))
+    // console.log("Done rock", i)
+  }
+  return res
 }
 
 
