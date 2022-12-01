@@ -22,7 +22,7 @@ class DiffrentialMovingObject {
     this.x = x;
     this.y = y;
     this.z = z;
-    this.w_speed = rand(0.01, 0.1);
+    this.w_speed = rand(1, 1);
   }
 
   getPos(dt, apply=false) {
