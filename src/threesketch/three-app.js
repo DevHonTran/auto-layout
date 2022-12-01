@@ -22,6 +22,7 @@ import {
     sRGBEncoding,
     SphereGeometry,
     MeshStandardMaterial,
+    DirectionalLightHelper,
 } from 'three'
 
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
@@ -35,6 +36,9 @@ const DELTA_T = (2 * Math.PI) / (10 * 2000)
 const NUM_ROCKS = 5000
 const DELTA_POS = 0.3
 
+function rand(l, r) {
+  return Math.random() * (r - l) + l
+}
 
 export class ThreeApp {
     constructor() {
@@ -54,7 +58,7 @@ export class ThreeApp {
         document.body.appendChild(this.renderer.domElement)
 
         this.scene = new Scene()
-        this.scene.background = new Color(0xffffff)
+        this.scene.background = new Color(0x000000)
         // this.scene.fog = new Fog(0xffffff, 3000, 4000);
 
         this.mouse = {x: 0, y: 0}
@@ -83,7 +87,7 @@ export class ThreeApp {
 
     init() {
         const geo = new SphereGeometry(0.1, 32, 16)
-        const mat = new MeshStandardMaterial({color: 0x00abb3})
+        const mat = new MeshStandardMaterial({color: 0xffffff})
 
         this.movingObjects = genDMovingObjects(NUM_ROCKS)
         this.meshes = []
@@ -95,7 +99,7 @@ export class ThreeApp {
           this.meshes[i].position.x = x * W;
           this.meshes[i].position.y = y * W;
           this.meshes[i].position.z = z * W;
-          mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.1
+          mesh.scale.x = mesh.scale.y = mesh.scale.z = rand(0.01, 0.05)
           this.scene.add(this.meshes[i])
         }
         this.startTime = Date.now()
@@ -103,10 +107,12 @@ export class ThreeApp {
     }
 
     initLight() {
-        const dirLight1 = new DirectionalLight(0xffffff, 0.5)
-        dirLight1.position.set(0, 1, 1)
+        const dirLight1 = new DirectionalLight(0xffffff, 3)
         dirLight1.scale.multiplyScalar(20)
+        dirLight1.position.set(1, 0, 1)
         this.scene.add(dirLight1)
+        // const helper1 = new DirectionalLightHelper( dirLight1, 5 );
+        // this.scene.add( helper1 );
 
         const hemiLight = new HemisphereLight(0xffffff, 0xffffff, 0.5)
         hemiLight.color.setHSL(0.6, 1, 0.6)
