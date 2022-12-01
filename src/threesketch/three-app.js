@@ -32,7 +32,7 @@ import Stats from 'three/examples/jsm/libs/stats.module'
 
 const W = 2
 const DELTA_T = (2 * Math.PI) / (10 * 2000)
-const NUM_ROCKS = 1000
+const NUM_ROCKS = 5000
 const DELTA_POS = 0.3
 
 
@@ -85,7 +85,7 @@ export class ThreeApp {
         const geo = new SphereGeometry(0.1, 32, 16)
         const mat = new MeshStandardMaterial({color: 0x00abb3})
 
-        this.movingObjects = genMovingObjects(NUM_ROCKS)
+        this.movingObjects = genTimeMovingObjects(NUM_ROCKS)
         this.meshes = []
         for (let i = 0; i < NUM_ROCKS; i++) {
           const {x, y, z} = this.movingObjects[i].getPos(Date.now() * DELTA_T);

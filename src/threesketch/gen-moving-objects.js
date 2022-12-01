@@ -1,4 +1,4 @@
-class MovingObject {
+class TimeMovingObject {
   constructor(fx, fy, fz) {
     this.fx = fx;
     this.fy = fy;
@@ -10,6 +10,25 @@ class MovingObject {
         x: this.fx(t),
         y: this.fy(t),
         z: this.fz(t),
+    }
+  }
+}
+
+class DiffrentialMovingObject {
+  constructor(dx, dy, dz, x, y, z) {
+    this.dx = dx;
+    this.dy = dy;
+    this.dz = dz;
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
+
+  getPos(dt) {
+    return {
+      x: x + this.dx(dt),
+      y: y + this.dy(dt),
+      z: z + this.dz(dt),
     }
   }
 }
@@ -31,13 +50,13 @@ function genFunction() {
   }
 }
 
-export function genMovingObjects(numMovingObjects) {
+export function genTimeMovingObjects(numMovingObjects) {
   const res = []
   for (let i = 0; i < numMovingObjects; i++) {
     const fx = genFunction()
     const fy = genFunction()
     const fz = genFunction()
-    res.push(new MovingObject(fx, fy, fz))
+    res.push(new TimeMovingObject(fx, fy, fz))
   }
   return res
 }
